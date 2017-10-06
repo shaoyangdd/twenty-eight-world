@@ -1,0 +1,100 @@
+<!DOCTYPE html >
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8"/>
+    <title>黑暗特工组</title>
+    <link rel="stylesheet" href="css/style.css" media="screen" type="text/css"/>
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script src="https://cdn.bootcss.com/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <script src='js/jquery-3.1.1.js'/>
+    <script src="js/sockjs.min.js"/>
+    <script src="js/stomp.js"/>
+    <script src="js/jquery-3.1.1.js"/>
+
+</head>
+
+<body onload="disconnect()">
+<noscript><h2 style="color: #e80b0a;">Sorry，浏览器不支持WebSocket</h2></noscript>
+<br/><br/>
+<div style="text-align:center"><a style="font-size:20px;color:#0AD5C1;font-weight:bold">黑暗特工组</a></div>
+<br/>
+
+<div id="convo" data-from="Sonu Joshi">
+    <ul id="chat_ul" class="chat-thread">
+
+    </ul>
+</div>
+
+<br/><br/><br/>
+
+<div>
+    <div role="form" style="text-align:center">
+        <div>
+            <textarea id="message_box" rows="3" style="border-radius:10px;color:#0AD5C1;font-size:20px;background-color: rgba(25, 147, 147, 0.2);width: 50%;height:200px" placeholder="请输入聊天内容"></textarea>
+        </div>
+        <div style="float:right;width:62.5%">
+            <button id="connect" type="button" class="btn btn-primary" style="color:#0AD5C1;background-color: rgba(25, 147, 147, 0.2);width: 50px;height:50px" onclick="connect();">连接</button>
+
+            <button id="disconnect" type="button" class="btn btn-primary" style="color:#0AD5C1;background-color: rgba(25, 147, 147, 0.2);width: 50px;height:50px" disabled="disabled" onclick="disconnect();">断开</button>
+
+            <button type="button" class="btn btn-primary" style="color:#0AD5C1;background-color: rgba(25, 147, 147, 0.2);width: 50px;height:50px" onclick="sendName();">
+                发送
+            </button>
+        </div>
+    </div>
+</div>
+
+<div style="text-align:center;clear:both">
+
+</div>
+
+<div class="credits">
+    <a href="http://codepen.io/clintioo/pen/HAkjq" style="font-size:20px">design by kangshaofei</a>
+</div>
+
+<br/><br/><br/>
+
+<script type="text/javascript">
+    var stompClient = null;
+    function setConnected(connected) {
+        document.getElementById("connect").disabled = connected;
+        document.getElementById("disconnect").disabled = !connected;
+//            document.getElementById("conversationDiv").style.visibility = connected ? 'visible' : 'hidden';
+//        $("#connect").disabled = connected;
+//        $("#disconnect").disabled = !connected;
+        $("#response").html();
+    }
+    function connect() {
+        var socket = new SockJS('/endpointSang');
+        stompClient = Stomp.over(socket);
+        stompClient.connect({}, function (frame) {
+            setConnected(true);
+            console.log('Connected:' + frame);
+            stompClient.subscribe('/topic/getResponse', function (response) {
+                showResponse(JSON.parse(response.body).responseMessage);
+            })
+        });
+    }
+    function disconnect() {
+        if (stompClient != null) {
+            stompClient.disconnect();
+        }
+        setConnected(false);
+        console.log('Disconnected');
+    }
+    function sendName() {
+
+        var name = $('#message_box').val();
+        console.log('name:' + name);
+        stompClient.send("/welcome", {}, JSON.stringify({'name': name}));
+        $('#message_box').val("").focus();
+    }
+    function showResponse(message) {
+        $("#chat_ul").append("<li >"+message+"</li>");
+    }
+</script>
+
+</body>
+</html>
